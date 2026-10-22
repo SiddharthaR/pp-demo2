@@ -1,6 +1,7 @@
 import re
 import string
 from decimal import Decimal, InvalidOperation
+from functools import partial
 from re import Pattern
 from typing import Callable, Optional
 
@@ -281,6 +282,12 @@ def extract_currency_symbol(
     return None
 
 
+# Apostrophe-like characters used as digit group separators (e.g. Swiss
+# "1'049.95"): ASCII apostrophe, right single quotation mark, modifier letter
+# apostrophe and acute accent.
+_strip_apostrophes = partial(re.compile("['\u2019\u02bc\u00b4]").sub, "")
+
+
 def extract_price_text(price: str) -> Optional[str]:
     r"""
     Extract text of a price from a string which contains price and
@@ -325,7 +332,7 @@ def extract_price_text(price: str) -> Optional[str]:
     if price.count("€") == 1:
         m = re.search(
             r"""
-        [\d\s.,']*?\d    # number, probably with thousand separators
+        [\d\s.,'\u2019\u02bc\u00b4]*?\d  # number, probably with thousand separators
         \s*?€(\s*?)?    # euro, probably separated by whitespace
         \d(?(1)\d|\d*?)  # if separated by whitespace - search one digit,
                          # multiple digits otherwise
@@ -335,11 +342,11 @@ def extract_price_text(price: str) -> Optional[str]:
             re.VERBOSE,
         )
         if m:
-            return m.group(0).replace(" ", "")
+            return _strip_apostrophes(m.group(0).replace(" ", ""))
 
     m = re.search(
         r"""
-        ([.]?\d[\d\s.,']*)   # number, probably with thousand separators
+        ([.]?\d[\d\s.,'\u2019\u02bc\u00b4]*)  # number, probably with thousand separators
         \s*?                # skip whitespace
         (?:[^%\d]|$)        # capture next symbol - it shouldn't be %
         """,
@@ -349,7 +356,7 @@ def extract_price_text(price: str) -> Optional[str]:
 
     if m:
         price_text = m.group(1).rstrip(",.")
-        price_text = price_text.replace("'", "")
+        price_text = _strip_apostrophes(price_text)
         return (
             price_text.strip()
             if price_text.count(".") == 1
