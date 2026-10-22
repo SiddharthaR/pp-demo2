@@ -101,6 +101,8 @@ PRICE_PARSING_EXAMPLES_NEW = [
     Example(None, "12,000원", "원", "12,000", 12000),
     Example(None, "3,500円", "円", "3,500", 3500),
     Example(None, "CHF 1'049,95", "CHF", "1049,95", 1049.95),
+    Example(None, "CHF 1’049.95", "CHF", "1049.95", 1049.95),
+    Example(None, "CHF 12’345", "CHF", "12345", 12345),
     Example(None, "€1'049,95", "€", "1049,95", 1049.95),
     Example(None, "644.00 جنيه", "جنيه", "644.00", 644.0),  # Egyptian pound (EGP)
     Example(None, "3,439.00 درهم", "درهم", "3,439.00", 3439.0),  # UAE dirham (AED)
